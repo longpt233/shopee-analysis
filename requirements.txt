@@ -1,0 +1,5 @@
+requests
+pandas
+tqdm
+kafka-python
+pyspark
