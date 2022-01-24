@@ -1,0 +1,13 @@
+2001:ac8:93::/48	Hanoi,Hanoi,Vietnam,Asia
+2001:dc8:9000::/48	Vietnam,Asia
+2001:dc8::/47	Vietnam,Asia
+2001:dc8:c000::/47	Vietnam,Asia
+2001:df0:2740::/48	Vietnam,Asia
+2001:df0:66::/48	Vietnam,Asia
+2001:df2:ce00::/48	Vietnam,Asia
+2001:df3:e500::/48	Vietnam,Asia
+2001:df4:2900::/48	Vietnam,Asia
+2001:df4:2d00::/48	Vietnam,Asia
+2001:df5:bb00::/48	Vietnam,Asia
+2001:df7:c600::/48	Vietnam,Asia
+2001:ee0:100::/42	Vietnam,Asia

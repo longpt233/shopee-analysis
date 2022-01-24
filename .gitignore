@@ -1,7 +1,7 @@
-venv
-craw-data
-pyspark-notebooks
+venv 
 
 __pycache__
 
 .idea
+
+target

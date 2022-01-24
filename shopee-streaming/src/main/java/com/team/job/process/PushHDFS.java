@@ -1,4 +1,4 @@
-package com.team.job;
+package com.team.job.process;
 
 import com.team.config.Config;
 import com.team.utils.SparkUtils;
@@ -18,7 +18,7 @@ public class PushHDFS {
     public void push(){
 
         HashMap<String, Object> kafkaParams = new HashMap<>();
-        kafkaParams.put("bootstrap.servers", Config.KAFKA_CLUSTER);
+        kafkaParams.put("bootstrap.servers", Config.KAFKA);
         kafkaParams.put("key.deserializer", StringDeserializer.class);
         kafkaParams.put("value.deserializer", StringDeserializer.class);
         kafkaParams.put("group.id", "" + System.currentTimeMillis());
@@ -26,7 +26,7 @@ public class PushHDFS {
         kafkaParams.put("enable.auto.commit", false);
 
         Collection<String> topics = new ArrayList<String>();
-        topics.add("user_contact");
+        topics.add("hello-kafka");
 
         SparkUtils sparkUtils = new SparkUtils("push data from kafka to hdfs");
         JavaInputDStream<ConsumerRecord<Object, Object>> stream = KafkaUtils.createDirectStream(
@@ -35,6 +35,15 @@ public class PushHDFS {
                 ConsumerStrategies.Subscribe(topics, kafkaParams)
         );
 
+        stream.foreachRDD(rdd ->{
+            System.out.println(rdd);
+        });
 
+
+    }
+
+    public static void main(String[] args) {
+        PushHDFS pushHDFS = new PushHDFS();
+        pushHDFS.push();
     }
 }
