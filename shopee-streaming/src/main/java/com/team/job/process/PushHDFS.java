@@ -1,15 +1,17 @@
 package com.team.job.process;
 
 import com.team.config.Config;
+import com.team.job.model.KeyWithVal;
 import com.team.utils.SparkUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.spark.TaskContext;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.RowFactory;
+import org.apache.spark.sql.*;
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.sql.catalyst.encoders.RowEncoder;
+import org.apache.spark.storage.StorageLevel;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaInputDStream;
 import org.apache.spark.streaming.api.java.JavaPairDStream;
@@ -51,51 +53,40 @@ public class PushHDFS {
                 ConsumerStrategies.Subscribe(topics, kafkaParams)
         );
 
-        JavaDStream<String> data = stream.map(v -> { return v.value(); });
+//        JavaDStream<String> data = stream.map(v -> { return v.value(); });
+//        data.print();
 
-        data.print();
+        stream.foreachRDD(rdd ->{
+            System.out.println("nhan dc 1 rdd= "+ rdd);
+            System.out.println("collect");
 
-//        stream.foreachRDD(rdd -> {
-//            OffsetRange[] offsetRanges = ((HasOffsetRanges) rdd.rdd()).offsetRanges();
-//            rdd.foreachPartition(consumerRecords -> {
-//                OffsetRange o = offsetRanges[TaskContext.get().partitionId()];
-//                System.out.println(
-//                        o.topic() + " " + o.partition() + " " + o.fromOffset() + " " + o.untilOffset());
-//            });
-//        });
+            // collect rdd in 1 duration
+            JavaPairRDD<String, String> rddKafkaMes = rdd.mapToPair(f -> {
+                System.out.println(f.key());
+                return new Tuple2<String, String>(f.key(), f.value());
+            });
+
+            System.out.println("process");
+            // neu co data -> xu li
+            if (rddKafkaMes.count() != 0) {
+                System.out.println("size kafka = "+ rddKafkaMes.count());
+                JavaRDD<KeyWithVal> jrdd = rddKafkaMes.map(f -> {
+                    String key = f._1;
+                    String val = f._2;
+                    return new KeyWithVal(key,val);
+                });
 
 
+                Dataset<KeyWithVal> df = sparkUtils.getSession().sqlContext().createDataset(jrdd.rdd(), Encoders.bean(KeyWithVal.class));
+                df.show();
+                df.write().mode(SaveMode.Append).parquet("hdfs://"+ Config.ACTIVE_NAME_NODE+":9000/test");
 
-//        stream.foreachRDD(rdd ->{
-//            System.out.println("nhan dc 1 rdd= "+ rdd);
-//            System.out.println("collect");
-//
-//            // collect rdd in 1 duration
-//            JavaPairRDD<String, String> rddKafkaMes = rdd.mapToPair(f -> {
-//                System.out.println(f.key());
-//                return new Tuple2<String, String>(f.key(), f.value());
-//            });
-//            rddKafkaMes.count();
-
-//            System.out.println("process");
-//            // neu co data -> xu li
-//            if (rddKafkaMes.count() != 0) {
-//                System.out.println("size = "+ rddKafkaMes.count());
-//                JavaRDD<Row> jrdd = rddKafkaMes.map(f -> {
-//                    String key = f._1;
-//                    String val = f._2;
-//                    System.out.println(key+"\t"+val);
-//                    return RowFactory.create(val);
-//                });
-//
-//                jrdd.foreach(System.out::println);
-//            }
-//        });
+            }
+        });
 
         System.out.println("start stream !!");
         javaStreamingContext.start();
         javaStreamingContext.awaitTermination();
-
 
     }
 

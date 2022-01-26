@@ -4,8 +4,9 @@ public class Config {
 
     // LOCAL
     public static final String DATA_DIR = "data/example.txt";
+
     // HDFS
-    public static final String ACTIVE_NAME_NODE = "localhost";
+    public static final String ACTIVE_NAME_NODE = "namenode-host";  // khong de ip dc vi no tu phan dai ra host -> loi
 
     // ES
     public static final String[] ELASTICSEARCH_CLUSTER = {"localhost"};

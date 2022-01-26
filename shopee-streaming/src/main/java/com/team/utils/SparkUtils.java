@@ -31,7 +31,7 @@ public class SparkUtils {
                 .config("spark.yarn.access.hadoopFileSystems", "hdfs://" + Config.ACTIVE_NAME_NODE +":9000/") // for read/write HDFS
                 .config("spark.serializer","org.apache.spark.serializer.KryoSerializer")
                 // 4 executor per instance of each worker
-                .config("spark.executor.instances", "4")
+//                .config("spark.executor.instances", "4")
                 .getOrCreate();
     }
 
