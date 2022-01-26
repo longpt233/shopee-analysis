@@ -81,7 +81,7 @@ services:
     user: root
     environment:
       - SPARK_MODE=master
-      - SPARK_MASTER=spark://spark-master-host:7077  # or yarn-cluster
+      - SPARK_MASTER=spark://spark-master-host:7077  # or yarn-cluster (defaul master when call spark submit )
       - MASTER=spark://spark-master-host:7077
       - SPARK_RPC_AUTHENTICATION_ENABLED=no
       - SPARK_RPC_ENCRYPTION_ENABLED=no
@@ -102,29 +102,29 @@ services:
     extra_hosts:
       - 'spark-master-host:0.0.0.0'
 
-  spark-worker:
-    container_name: spark-worker-name
-    hostname: spark-worker-host
-    image: bitnami/spark:3
-    depends_on:
-      - spark-master
-    environment:
-      - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark-master-host:7077
-      - SPARK_MASTER=spark://spark-master-host:7077
-      - SPARK_MASTER_HOST=spark-master-host
-      - MASTER=spark://spark-master-host:7077
-      - SPARK_WORKER_MEMORY=1G
-      - SPARK_WORKER_CORES=2
-      - SPARK_RPC_AUTHENTICATION_ENABLED=no
-      - SPARK_RPC_ENCRYPTION_ENABLED=no
-      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-      - SPARK_SSL_ENABLED=no
-    ports:
-      - '8081:8081'
-    networks:
-      project3-network:
-        ipv4_address: 172.25.0.10
+  # spark-worker:
+  #   container_name: spark-worker-name
+  #   hostname: spark-worker-host
+  #   image: bitnami/spark:3
+  #   depends_on:
+  #     - spark-master
+  #   environment:
+  #     - SPARK_MODE=worker
+  #     - SPARK_MASTER_URL=spark://spark-master-host:7077
+  #     - SPARK_MASTER=spark://spark-master-host:7077
+  #     - SPARK_MASTER_HOST=spark-master-host
+  #     - MASTER=spark://spark-master-host:7077
+  #     - SPARK_WORKER_MEMORY=1G
+  #     - SPARK_WORKER_CORES=2
+  #     - SPARK_RPC_AUTHENTICATION_ENABLED=no
+  #     - SPARK_RPC_ENCRYPTION_ENABLED=no
+  #     - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+  #     - SPARK_SSL_ENABLED=no
+  #   ports:
+  #     - '8081:8081'
+  #   networks:
+  #     project3-network:
+  #       ipv4_address: 172.25.0.10
 
 volumes:
   hadoop_namenode:

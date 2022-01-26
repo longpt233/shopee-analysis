@@ -1,0 +1,19 @@
+version: '2'
+
+services:
+  spark:
+    image: docker.io/bitnami/spark:3
+    container_name: spark-master-name
+    hostname: spark-host
+    environment:
+      - SPARK_MODE=master 
+    ports:
+      - '8080:8080'
+      - '4040:4040'
+  # spark-worker:
+  #   image: docker.io/bitnami/spark:3
+  #   environment:
+  #     - SPARK_MODE=worker
+  #     - SPARK_MASTER_URL=spark://spark:7077
+  #     - SPARK_WORKER_MEMORY=1G
+  #     - SPARK_WORKER_CORES=1 

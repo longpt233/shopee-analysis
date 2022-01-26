@@ -48,6 +48,10 @@ PLAINTEXT    *( no auth)
 spark-submit --master spark://spark-master-host:7077 --total-executor-cores 4 --class com.team.job.process.PushHDFS /opt/bitnami/spark/examples/jars/shopee-streaming-1.0-SNAPSHOT-jar-with-dependencies.jar
 ```
 
+```
+start-slave.sh spark://localhost:7077 
+```
+
 
 > # DEBUG 
 - có thể vô master spark để dùng shell đọc kakfa 
