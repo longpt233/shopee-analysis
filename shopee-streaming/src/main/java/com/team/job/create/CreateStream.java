@@ -14,29 +14,30 @@ import java.util.List;
 import java.util.Properties;
 
 /**
- * job gui message vao kafka
+ * send message to kafka
+ * TODO : viết job scrapy streaming luôn
  * */
 public class CreateStream {
 
     public void initFlow(){
         Properties prop = new Properties();
 
-        prop.put("bootstrap.servers", Config.KAFKA+":29092");
+        prop.put("bootstrap.servers", Config.KAFKA);
         prop.put("retries", 0);
         prop.put("key.serializer", StringSerializer.class);
         prop.put("value.serializer", StringSerializer.class);
 
         Producer<String, String> producer = new KafkaProducer<>(prop);
 
-        List<String> data = getDataByRow("data/example.txt");
+        List<String> data = getDataByRow(Config.DATA_DIR);
 
         for(String i : data) {
             String key = i.split("\t")[0];
             String val = i.split("\t")[1];
-            producer.send(new ProducerRecord<>("hello-kafka", key, val));
+            producer.send(new ProducerRecord<>(Config.KAFKA_TOPIC, key, val));
         }
 
-        System.out.println("successfully!");
+        System.out.println("send data successfully!");
         producer.close();
     }
 
@@ -63,7 +64,6 @@ public class CreateStream {
         return res;
 
     }
-
 
     public static void main(String[] args) {
         CreateStream createStream = new CreateStream();

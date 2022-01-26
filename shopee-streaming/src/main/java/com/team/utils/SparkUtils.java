@@ -14,44 +14,53 @@ public class SparkUtils {
     public SparkSession session;
     public JavaSparkContext javaSparkContext;
     public JavaStreamingContext javaStreamingContext;
-    public SQLContext sqlContext;
 
-    public SparkUtils(String nameJob) {
-        System.out.println("Create spark");
-        session = createSparkConfig(nameJob, false, true);
-        javaSparkContext = new JavaSparkContext(session.sparkContext());
-        javaStreamingContext = new JavaStreamingContext(javaSparkContext, Durations.seconds(30));
-        sqlContext = session.sqlContext();
-        session.sparkContext().setLogLevel("ERROR");
-        System.out.println("Create Done!!");
-    }
-
-    public SparkSession createSparkConfig(String nameJob, boolean log, boolean master){
+    public void  createSparkSession(String nameJob, boolean log){
         if (!log) {
             Logger.getLogger("org").setLevel(Level.OFF);
             Logger.getLogger("akka").setLevel(Level.OFF);
         }
-
-        return SparkSession
+        session = SparkSession
                 .builder()
                 .appName(nameJob)
+                // spark config
                 .config("spark.debug.maxToStringFields",100)
                 .config("spark.speculation", "true")
                 .config("spark.executor.extraJavaOptions", "-Xss512m")
                 .config("spark.sql.parquet.binaryAsString", "true")
-                .config("spark.yarn.access.hadoopFileSystems", "hdfs://" + Config.ACTIVE_NAME_NODE +":9000/")
+                .config("spark.yarn.access.hadoopFileSystems", "hdfs://" + Config.ACTIVE_NAME_NODE +":9000/") // for read/write HDFS
                 .config("spark.serializer","org.apache.spark.serializer.KryoSerializer")
+                // 4 executor per instance of each worker
+                .config("spark.executor.instances", "4")
+                .getOrCreate();
+    }
+
+    public void createSparkSessionWithES(String nameJob, boolean log){
+        if (!log) {
+            Logger.getLogger("org").setLevel(Level.OFF);
+            Logger.getLogger("akka").setLevel(Level.OFF);
+        }
+        session =  SparkSession
+                .builder()
+                .appName(nameJob)
+                // spark config
+                .config("spark.debug.maxToStringFields",100)
+                .config("spark.speculation", "true")
+                .config("spark.executor.extraJavaOptions", "-Xss512m")
+                .config("spark.sql.parquet.binaryAsString", "true")
+                .config("spark.yarn.access.hadoopFileSystems", "hdfs://" + Config.ACTIVE_NAME_NODE +":9000/") // for read/write HDFS
+                .config("spark.serializer","org.apache.spark.serializer.KryoSerializer")
+                //  es config
                 .config("es.nodes", Config.ELASTICSEARCH_CLUSTER[0])
                 .config("es.index.auto.create", "true")
                 .config("es.write.operation", "upsert")
                 .config("refresh_interval", "30s")
                 .config("es.batch.size.entries", "2000")
                 .config("es.resource", "_all/types")
-                .config("es.cluster.name","kinghub")
+                .config("es.cluster.name",Config.ELASTICSEARCH_NAME)
                 .config("es.batch.write.retry.count", "3")
                 .config("es.batch.write.retry.wait", "10s")
                 .getOrCreate();
-
     }
 
     public SparkSession getSession() {
@@ -59,15 +68,14 @@ public class SparkUtils {
     }
 
     public JavaSparkContext getJavaSparkContext() {
+        javaSparkContext = new JavaSparkContext(session.sparkContext());
         return javaSparkContext;
     }
 
-    public JavaStreamingContext getJavaStreamingContext() {
+    public JavaStreamingContext getJavaStreamingContext(int durationInSecond) {
+        javaSparkContext = new JavaSparkContext(session.sparkContext()); // create spark context to create Streaming context
+        javaStreamingContext = new JavaStreamingContext(javaSparkContext, Durations.seconds(durationInSecond));
         return javaStreamingContext;
-    }
-
-    public SQLContext getSqlContext() {
-        return sqlContext;
     }
 
     public void close() {

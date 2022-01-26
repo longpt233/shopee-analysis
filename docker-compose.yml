@@ -33,70 +33,35 @@ services:
   #   networks:
   #     project3-network:
   #       ipv4_address: 172.25.0.3
-  
-
-  # ZOOKEEPER for kafka 
-  # zookeeper:
-  #   image: 'bitnami/zookeeper:3'
-  #   user: root
-  #   container_name: zookeeper-name
-  #   hostname : zoo-host
-  #   ports:
-  #     - '2181:2181'
-  #   environment:
-  #     - ALLOW_ANONYMOUS_LOGIN=yes
-  #   volumes:
-  #     - "zookeeper_data:/bitnami"
-  #   networks:
-  #     project3-network:
-  #       ipv4_address: 172.25.0.7
-  # KAFKA
-  # kafka:
-  #   image: 'bitnami/kafka'
-  #   user: root
-  #   container_name: kafka-name
-  #   ports:
-  #     - '9092:9092'
-  #   environment:
-  #     - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-  #     - ALLOW_PLAINTEXT_LISTENER=yes
-  #     # - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-  #     # - KAFKA_CFG_LISTENERS=PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
-  #     # - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
-  #   volumes:
-  #     - "kafka_data:/bitnami"
-  #   networks:
-  #     project3-network:
-  #       ipv4_address: 172.25.0.8
-  #   depends_on:
-  #     - zookeeper
 
   zookeeper:
     image: zookeeper:3.4.9
-    hostname: zookeeper
+    container_name: zookeeper-name 
+    hostname: zookeeper-host
     ports:
       - "2181:2181"
     environment:
       ZOO_MY_ID: 1
       ZOO_PORT: 2181
-      ZOO_SERVERS: server.1=zookeeper:2888:3888
+      ZOO_SERVERS: server.1=zookeeper-host:2888:3888
     networks:
       project3-network:
         ipv4_address: 172.25.0.7
 
   kafka:
     image: confluentinc/cp-kafka:5.3.0
-    hostname: kafka-name
+    container_name: kafka-name
+    hostname: kafka-host
     ports:
       - 9092:9092
       - 19092:19092
       - 29092:29092
     environment: 
 
-      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka-name:19092,LISTENER_DOCKER_EXTERNAL://kafka-name:9092, OUTSIDE://localhost:29092
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka-host:19092,LISTENER_DOCKER_EXTERNAL://kafka-host:9092, OUTSIDE://localhost:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT, OUTSIDE:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
-      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper-host:2181"
       KAFKA_BROKER_ID: 1
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     depends_on:
@@ -107,31 +72,60 @@ services:
 
   #  SPARK
   spark-master:
-    container_name: spark-master 
+    container_name: spark-master-name 
+    hostname: spark-master-host
     image: bitnami/spark:3
     user: root
     environment:
       - SPARK_MODE=master
-      - SPARK_MASTER=spark://spark-master:7077
-      - MASTER=spark://spark-master:7077
+      - SPARK_MASTER=spark://spark-master-host:7077  # or yarn-cluster
+      - MASTER=spark://spark-master-host:7077
       - SPARK_RPC_AUTHENTICATION_ENABLED=no
       - SPARK_RPC_ENCRYPTION_ENABLED=no
       - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
       - SPARK_SSL_ENABLED=no
-      - SPARK_MASTER_HOST=spark-master
+      - SPARK_MASTER_HOST=spark-master-host
+
+      # - SPARK_DRIVER_MEMORY=1G      # không ăn thua 
+      # - SPARK_EXECUTER_MEMORY=1G
+      # - SPARK_EXECUTER_INSTANCES=10
     
     ports:
-      - '8080:8080'
+      - '8080:8080'  # ui master
+      - '4040:4040'  # job
     networks:
       project3-network:
         ipv4_address: 172.25.0.9
     extra_hosts:
-      - 'spark-master:0.0.0.0'
+      - 'spark-master-host:0.0.0.0'
+
+  spark-worker:
+    container_name: spark-worker-name
+    hostname: spark-worker-host
+    image: bitnami/spark:3
+    depends_on:
+      - spark-master
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master-host:7077
+      - SPARK_MASTER=spark://spark-master-host:7077
+      - SPARK_MASTER_HOST=spark-master-host
+      - MASTER=spark://spark-master-host:7077
+      - SPARK_WORKER_MEMORY=1G
+      - SPARK_WORKER_CORES=2
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+    ports:
+      - '8081:8081'
+    networks:
+      project3-network:
+        ipv4_address: 172.25.0.10
 
 volumes:
   hadoop_namenode:
-  hadoop_datanode:
-  hadoop_historyserver:
+  hadoop_datanode: 
   zookeeper_data:
     driver: local
   kafka_data:

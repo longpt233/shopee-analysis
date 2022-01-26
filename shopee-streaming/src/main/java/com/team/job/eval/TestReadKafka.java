@@ -1,8 +1,8 @@
 package com.team.job.eval;
 
+import com.team.config.Config;
 import org.apache.kafka.clients.consumer.*;
 
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.Properties;
 
@@ -20,7 +20,7 @@ public class TestReadKafka {
         prop.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");   // or latest
 
         try (Consumer<String, String> consumer = new KafkaConsumer<String, String>(prop)) {
-            consumer.subscribe(Arrays.asList("hello-kafka"));
+            consumer.subscribe(Arrays.asList(Config.KAFKA_TOPIC));
             while(true) {
                 ConsumerRecords<String, String> records = consumer.poll(100);
                 for(ConsumerRecord<String, String> record: records) {

@@ -41,12 +41,20 @@ PLAINTEXT    *( no auth)
 
 ## 3. Dùng SparkStreaming đọc và đẩy vô HDFS 
 
+- chấp nhận là 1 thâng spark master sẽ không thể init được executer 
+
+- run 
+```
+spark-submit --master spark://spark-master-host:7077 --total-executor-cores 4 --class com.team.job.process.PushHDFS /opt/bitnami/spark/examples/jars/shopee-streaming-1.0-SNAPSHOT-jar-with-dependencies.jar
+```
+
+
 > # DEBUG 
 - có thể vô master spark để dùng shell đọc kakfa 
 
 - vô master. check job ở http://localhost:8080/
 ```
-docker exec -it -t spark-master bash
+docker exec -it -t spark-master-name bash
 ```
 
 - vô shell 
