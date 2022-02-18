@@ -1,40 +1,36 @@
 version: "3"
-services:
-  # HADOOP
-  namenode:
-    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
-    container_name: namenode-name
-    hostname: namenode-host
-    restart: always
-    ports:
-      - 9870:9870
-      - 9000:9000
-    volumes:
-      - hadoop_namenode:/hadoop/dfs/name
-    environment:
-      - CLUSTER_NAME=test
-    env_file:
-      - ./hadoop/hadoop.env
-    networks:
-      project3-network:
-        ipv4_address: 172.25.0.2
 
-  datanode:
-    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
-    container_name: datanode-name
-    hostname: datanode-host
-    restart: always
-    ports:
-      - 9864:9864
-    volumes:
-      - hadoop_datanode:/hadoop/dfs/data
-    environment:
-      SERVICE_PRECONDITION: "namenode-host:9870"
-    env_file:
-      - ./hadoop/hadoop.env
+services:
+
+  namenode:
+    image: longpt233/hadoop-spark:2.0.0
+    container_name: hadoop-master   # = host name = core-site 
+    ports: 
+      - 8088:8088    # ui yarn
+      - 4040:4040   # ui spark local mode
+      - 9870:9870   # ui name node  
+    tty: true
     networks:
-      project3-network:
-        ipv4_address: 172.25.0.3
+        cluster-hadoop:
+          ipv4_address: 172.25.0.2
+
+  datanode1:
+    image: longpt233/hadoop-base:2.0.0
+    container_name: hadoop-slave1   # phai tuong ung voi file worker ben trong 
+    tty: true
+    ports:  
+      - 9864:9864
+    networks:
+        cluster-hadoop:
+          ipv4_address: 172.25.0.3
+
+  datanode2:
+    image: longpt233/hadoop-base:2.0.0
+    container_name: hadoop-slave2 
+    tty: true
+    networks:
+        cluster-hadoop:
+          ipv4_address: 172.25.0.4
 
   # 
   zookeeper:
@@ -48,7 +44,7 @@ services:
       ZOO_PORT: 2181
       ZOO_SERVERS: server.1=zookeeper-host:2888:3888
     networks:
-      project3-network:
+      cluster-hadoop:
         ipv4_address: 172.25.0.7
 
   kafka:
@@ -60,7 +56,6 @@ services:
       - 19092:19092
       - 29092:29092
     environment: 
-
       KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka-host:19092,LISTENER_DOCKER_EXTERNAL://kafka-host:9092, OUTSIDE://localhost:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT, OUTSIDE:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
@@ -70,73 +65,13 @@ services:
     depends_on:
       - zookeeper
     networks:
-      project3-network:
+      cluster-hadoop:
         ipv4_address: 172.25.0.8
 
-  #  SPARK
-  spark-master:
-    container_name: spark-master-name 
-    hostname: spark-master-host
-    image: bitnami/spark:3
-    user: root
-    environment:
-      - SPARK_MODE=master
-      - SPARK_MASTER=spark://spark-master-host:7077  # or yarn-cluster (defaul master when call spark submit )
-      - MASTER=spark://spark-master-host:7077
-      - SPARK_RPC_AUTHENTICATION_ENABLED=no
-      - SPARK_RPC_ENCRYPTION_ENABLED=no
-      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-      - SPARK_SSL_ENABLED=no
-      - SPARK_MASTER_HOST=spark-master-host
-
-      # - SPARK_DRIVER_MEMORY=1G      # không ăn thua 
-      # - SPARK_EXECUTER_MEMORY=1G
-      # - SPARK_EXECUTER_INSTANCES=10
-    
-    ports:
-      - '8080:8080'  # ui master
-      - '4040:4040'  # job
-    networks:
-      project3-network:
-        ipv4_address: 172.25.0.9
-    extra_hosts:
-      - 'spark-master-host:0.0.0.0'
-
-  # spark-worker:
-  #   container_name: spark-worker-name
-  #   hostname: spark-worker-host
-  #   image: bitnami/spark:3
-  #   depends_on:
-  #     - spark-master
-  #   environment:
-  #     - SPARK_MODE=worker
-  #     - SPARK_MASTER_URL=spark://spark-master-host:7077
-  #     - SPARK_MASTER=spark://spark-master-host:7077
-  #     - SPARK_MASTER_HOST=spark-master-host
-  #     - MASTER=spark://spark-master-host:7077
-  #     - SPARK_WORKER_MEMORY=1G
-  #     - SPARK_WORKER_CORES=2
-  #     - SPARK_RPC_AUTHENTICATION_ENABLED=no
-  #     - SPARK_RPC_ENCRYPTION_ENABLED=no
-  #     - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-  #     - SPARK_SSL_ENABLED=no
-  #   ports:
-  #     - '8081:8081'
-  #   networks:
-  #     project3-network:
-  #       ipv4_address: 172.25.0.10
-
-volumes:
-  hadoop_namenode:
-  hadoop_datanode: 
-  zookeeper_data:
-    driver: local
-  kafka_data:
-    driver: local
 networks:
-  project3-network: 
+  cluster-hadoop:
     driver: bridge
     ipam:
       driver: default
       config:
-        - subnet: 172.25.0.0/16 
+        - subnet: 172.25.0.0/16

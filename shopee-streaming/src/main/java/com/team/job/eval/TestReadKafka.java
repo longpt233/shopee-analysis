@@ -11,7 +11,7 @@ public class TestReadKafka {
     public void readKafka(){
         Properties prop = new Properties();
 
-        prop.put("bootstrap.servers", "localhost:29092");
+        prop.put("bootstrap.servers",  Config.KAFKA);
         prop.setProperty("group.id", "test");
         prop.setProperty("enable.auto.commit", "true");
         prop.setProperty("auto.commit.interval.ms", "1000");
