@@ -107,6 +107,41 @@ df.show()
 
 ## 4. Đọc từ HDFS đẩy vô ES 
 
+- check es
+```
+long@hello:~$ curl localhost:9200
+{
+  "name" : "es-host",
+  "cluster_name" : "docker-cluster",
+  "cluster_uuid" : "AEMQsZwhTVy4kLUqLdmEtw",
+  "version" : {
+    "number" : "7.11.0",
+    "build_flavor" : "default",
+    "build_type" : "docker",
+    "build_hash" : "8ced7813d6f16d2ef30792e2fcde3e755795ee04",
+    "build_date" : "2021-02-08T22:44:01.320463Z",
+    "build_snapshot" : false,
+    "lucene_version" : "8.7.0",
+    "minimum_wire_compatibility_version" : "6.8.0",
+    "minimum_index_compatibility_version" : "6.0.0-beta1"
+  },
+  "tagline" : "You Know, for Search"
+}
+
+```
+
+- đẩy lên dùng java 
+
+- check data trên kibana: ```http://localhost:5601/app/dev_tools#/console```
+```
+GET test/_search  # test is index name
+{
+  "query": {
+    "match_all": {}
+  }
+}
+```
+
 
 
 

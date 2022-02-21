@@ -76,7 +76,6 @@ public class PushHDFS {
                     return new KeyWithVal(key,val);
                 });
 
-
                 Dataset<KeyWithVal> df = sparkUtils.getSession().sqlContext().createDataset(jrdd.rdd(), Encoders.bean(KeyWithVal.class));
                 df.show();
                 df.write().mode(SaveMode.Append).parquet("hdfs://"+ Config.ACTIVE_NAME_NODE+":9000/test");

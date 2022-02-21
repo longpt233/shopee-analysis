@@ -57,7 +57,7 @@ public class SparkUtils {
                 .config("refresh_interval", "30s")
                 .config("es.batch.size.entries", "2000")
                 .config("es.resource", "_all/types")
-                .config("es.cluster.name",Config.ELASTICSEARCH_NAME)
+                .config("es.cluster.name",Config.ELASTICSEARCH_INDEX_NAME)
                 .config("es.batch.write.retry.count", "3")
                 .config("es.batch.write.retry.wait", "10s")
                 .getOrCreate();
