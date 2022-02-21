@@ -9,7 +9,7 @@ public class Config {
     public static final String ACTIVE_NAME_NODE = "hadoop-master";  // khong de ip dc vi no tu phan dai ra host -> loi
 
     // ES
-    public static final String[] ELASTICSEARCH_CLUSTER = {"localhost"};
+    public static final String[] ELASTICSEARCH_CLUSTER = {"es-host"};   // or localhost for test
     public static final String ELASTICSEARCH_INDEX_NAME = "test";
 
     // KAFKA

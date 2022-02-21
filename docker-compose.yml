@@ -10,6 +10,8 @@ services:
       - 4040:4040   # ui spark local mode
       - 9870:9870   # ui name node  
     tty: true
+    volumes:
+      - ./data-docker/hadoop/namenode:/root/hdfs/namenode
     networks:
         cluster-hadoop:
           ipv4_address: 172.25.0.2
@@ -20,6 +22,8 @@ services:
     tty: true
     ports:  
       - 9864:9864
+    volumes:
+      - ./data-docker/hadoop/datanode-1:/root/hdfs/datanode
     networks:
         cluster-hadoop:
           ipv4_address: 172.25.0.3
@@ -28,6 +32,8 @@ services:
     image: longpt233/hadoop-base:2.0.0
     container_name: hadoop-slave2 
     tty: true
+    volumes:
+      - ./data-docker/hadoop/datanode-2:/root/hdfs/datanode
     networks:
         cluster-hadoop:
           ipv4_address: 172.25.0.4
@@ -42,6 +48,9 @@ services:
       ZOO_MY_ID: 1
       ZOO_PORT: 2181
       ZOO_SERVERS: server.1=zookeeper-host:2888:3888
+    volumes:
+      - ./data-docker/zoo/data:/data
+      - ./data-docker/zoo/datalog:/datalog
     networks:
       cluster-hadoop:
         ipv4_address: 172.25.0.7
@@ -63,6 +72,8 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     depends_on:
       - zookeeper
+    volumes:
+      - ./data-docker/kafka/data:/var/lib/kafka/data
     networks:
       cluster-hadoop:
         ipv4_address: 172.25.0.8
@@ -70,7 +81,7 @@ services:
   elasticsearch:
     container_name: es-name
     hostname: es-host
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.11.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.12.0
     environment:
       - xpack.security.enabled=false
       - "discovery.type=single-node"
@@ -84,10 +95,12 @@ services:
       memlock: 
         hard: -1
         soft: -1
+    volumes:
+      - ./data-docker/es/data:/usr/share/elasticsearch/data
 
   kibana:
     container_name: kb-name
-    image: docker.elastic.co/kibana/kibana:7.11.0
+    image: docker.elastic.co/kibana/kibana:7.12.0
     environment:
       - ELASTICSEARCH_HOSTS=http://es-host:9200
     networks:

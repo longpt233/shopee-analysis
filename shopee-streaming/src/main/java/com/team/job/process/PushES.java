@@ -2,6 +2,10 @@ package com.team.job.process;
 
 import com.team.config.Config;
 import com.team.utils.ESUtils;
+import com.team.utils.SparkUtils;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -11,29 +15,30 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
 
 import java.io.IOException;
+import java.io.Serializable;
 
-public class PushES {
+/**
+ * job đọc từ hdfs đẩy vô es
+ * example compute spark
+ */
 
-    private ESUtils esUtils;
+public class PushES implements Serializable {
+
+    private SparkUtils sparkUtils;
 
     public PushES(){
-        esUtils = new ESUtils();
+        sparkUtils = new SparkUtils();
+        sparkUtils.createSparkSession("get and push data",false);
     }
 
-    public String getDataTest(){
-        return "{\"age\":10,\"dateOfBirth\":1471466076564,"
-                +"\"fullName\":\"John Doe\"}";
-    }
-
-    public XContentBuilder getDataTestBuilder() {
+    public XContentBuilder getKVBuilder(Row row) {
 
         XContentBuilder builder = null;
         try {
             builder = XContentFactory.jsonBuilder()
                     .startObject()
-                    .field("fullName", "Test")
-                    .field("dateOfBirth", "1471466076566")
-                    .field("age", "10")
+                    .field("k", row.getString(0))
+                    .field("v", row.getString(1))
                     .endObject();
         } catch (IOException e) {
             e.printStackTrace();
@@ -42,32 +47,32 @@ public class PushES {
     }
 
     public void push(){
+        SparkSession sparkSession = sparkUtils.getSession();
+        Dataset<Row> df = sparkSession.read().parquet("hdfs://"+ Config.ACTIVE_NAME_NODE+":9000/test/*");
+        df.repartition(2).foreachPartition(f->{   // repartition - tinh phan tan tren cum
+            ESUtils esUtils = new ESUtils();
+            RestHighLevelClient client = esUtils.getClient();
+            IndexRequest request = new IndexRequest(Config.ELASTICSEARCH_INDEX_NAME).timeout(TimeValue.timeValueSeconds(30));
+            while (f.hasNext()) {
 
-        RestHighLevelClient client = esUtils.getClient();
-        IndexRequest request = new IndexRequest(Config.ELASTICSEARCH_INDEX_NAME).timeout(TimeValue.timeValueSeconds(30));
+                Row data = f.next();
+                request.source(getKVBuilder(data));
 
-//        request.source(getDataTest(), XContentType.JSON);
-        request.source(getDataTestBuilder());
-
-        try {
-            IndexResponse response = client.index(request, RequestOptions.DEFAULT);
-            System.out.println("res: "+response);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }finally {
-            try {
-                client.close();   // không đóng conn thì chương trình không thoát
-            } catch (IOException e) {
-                e.printStackTrace();
+                try {
+                    IndexResponse response = client.index(request, RequestOptions.DEFAULT);
+                    System.out.println("res: "+response);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-        }
+            esUtils.closeConn();
+        });
 
     }
 
     public static void main(String[] args) {
         PushES task = new PushES();
         task.push();
-
     }
 
 }

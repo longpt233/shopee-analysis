@@ -5,16 +5,10 @@ import com.team.job.model.KeyWithVal;
 import com.team.utils.SparkUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.spark.TaskContext;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.*;
-import org.apache.spark.api.java.function.Function;
-import org.apache.spark.sql.catalyst.encoders.RowEncoder;
-import org.apache.spark.storage.StorageLevel;
-import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaInputDStream;
-import org.apache.spark.streaming.api.java.JavaPairDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka010.*;
 import scala.Tuple2;
@@ -22,8 +16,12 @@ import scala.Tuple2;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 
+
+/**
+ * Streaming read kafka push HDFS
+ *
+ */
 public class PushHDFS {
     private SparkUtils sparkUtils;
 

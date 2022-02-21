@@ -15,7 +15,7 @@ bigdata flow example
 # Spark on Hadoop 
 ![](./imgs-md/hadoop-spark.png)
 
-- sau khi compose up thì cần vô master bật hadoop
+- sau khi compose up thì cần vô master bật hadoop. nếu là lần thứ 2 thì k cần format vì đã được map volume
 ```
 docker exec -it hadoop-master bash    
 hadoop namenode -format
@@ -33,6 +33,7 @@ root@47116eadca50:/# jps
 ```
 - check jps trên worker 
 ```
+docker exec -it hadoop-slave1 bash
 root@32de54052105:~# jps
 471 Jps
 236 NodeManager
@@ -60,11 +61,17 @@ spark-shell --master yarn
 ## 1. Crawl
 
 ## 2. Chạy producer gửi massage vô kafka 
-- trong prj chạy lệnh class 
+- trong prj chạy lệnh class đẩy data vô cổng ngoài docker ```localhost:29092```
 ```com/team/job/create/CreateStream.java```
 
-- test thử 
+- test thử  bên ngoài docker. cũng đọc ở cổng ```localhost:29092```
 ```com/team/job/eval/TestReadKafka.java```
+
+- attach vô trong kafka để đọc data
+```
+docker exec -it kafka-name bash
+kafka-console-consumer --topic hello-kafka --bootstrap-server kafka-host:9092 --from-beginning 
+```
 ## 3. Dùng SparkStreaming đọc và đẩy vô HDFS 
 
 ### standalone
@@ -102,7 +109,31 @@ spark-shell --master yarn --conf spark.sql.parquet.binaryAsString=true --num-exe
 #
 val df = spark.read.parquet("hdfs://hadoop-master:9000/test")
 df.show()
-
++------------------+--------------------+                                                                                          
+|               key|                 val|               
++------------------+--------------------+                                                                                          
+|  2001:ac8:93::/48|Hanoi,Hanoi,Vietn...|                                                                                          
+|2001:dc8:9000::/48|        Vietnam,Asia|                    
+|     2001:dc8::/47|        Vietnam,Asia|                                                                                          
+|2001:dc8:c000::/47|        Vietnam,Asia|                                                                
+|2001:df0:2740::/48|        Vietnam,Asia|                                                                                          
+|  2001:df0:66::/48|        Vietnam,Asia|                    
+|2001:df2:ce00::/48|        Vietnam,Asia|                                                                                          
+|2001:df3:e500::/48|        Vietnam,Asia|                                                                
+|2001:df4:2900::/48|        Vietnam,Asia|                                                                
+|2001:df4:2d00::/48|        Vietnam,Asia|                                                                
+|2001:df5:bb00::/48|        Vietnam,Asia|                                                                
+|2001:df7:c600::/48|        Vietnam,Asia|                                                                
+| 2001:ee0:100::/42|        Vietnam,Asia|                                                                
+|  2001:ac8:93::/48|Hanoi,Hanoi,Vietn...|                                                                
+|2001:dc8:9000::/48|        Vietnam,Asia|                                                                
+|     2001:dc8::/47|        Vietnam,Asia|                                                                
+|2001:dc8:c000::/47|        Vietnam,Asia|                                                                
+|2001:df0:2740::/48|        Vietnam,Asia|                                                                
+|  2001:df0:66::/48|        Vietnam,Asia|                                                                
+|2001:df2:ce00::/48|        Vietnam,Asia|                                                                
++------------------+--------------------+                                                                
+only showing top 20 rows
 ```
 
 ## 4. Đọc từ HDFS đẩy vô ES 
@@ -141,6 +172,24 @@ GET test/_search  # test is index name
   }
 }
 ```
+
+- đọc data từ HDFS và đẩy vô es
+```
+spark-submit --master yarn --num-executors 3  --executor-memory 1G --class com.team.job.process.PushES shopee-streaming-1.0-SNAPSHOT-jar-with-dependencies.jar
+```
+
+- check data
+![](./imgs-md/es-data.png) 
+
+## 5. lấy data từ es cho sang spark tính toán song song 
+
+- load data tu es va chay phan tan 
+```
+spark-submit --master yarn --num-executors 3  --executor-memory 1G --class com.team.job.process.ComputeES shopee-streaming-1.0-SNAPSHOT-jar-with-dependencies.jar
+```
+
+![](./imgs-md/spark-job.png)
+## 6. visualize bằng kibana 
 
 
 

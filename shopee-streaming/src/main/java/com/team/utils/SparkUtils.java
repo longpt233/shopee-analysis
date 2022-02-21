@@ -9,7 +9,9 @@ import org.apache.spark.sql.SparkSession;
 import org.apache.spark.streaming.Durations;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 
-public class SparkUtils {
+import java.io.Serializable;
+
+public class SparkUtils implements Serializable {
 
     public SparkSession session;
     public JavaSparkContext javaSparkContext;
